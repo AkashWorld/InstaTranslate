@@ -10,20 +10,26 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,6 +55,51 @@ public class MainActivity extends AppCompatActivity {
         longitude, image, and translatedText are not NULL. I'm not checking the validity. */
 
         addToFirebaseDatabase(); // Add to Firebase database
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        mDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            // Called everytime DB changes
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot translate : dataSnapshot.getChildren()) {
+                    Translation translation = translate.getValue(Translation.class);
+
+                    // Work with the 'translation' object ...
+
+                    StorageReference path = mStorage.child("photos/"+translation.imageName);
+
+                    File localFile = null;
+                    try {
+                        localFile = File.createTempFile(translation.imageName, "");
+                        path.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                // Local temp file has been created
+
+                                // Work with the image here ...
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle any errors
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void addToFirebaseDatabase() {
