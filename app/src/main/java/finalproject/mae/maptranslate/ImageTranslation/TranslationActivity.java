@@ -141,9 +141,10 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
             try{
                 //Not sure what to do here, methods that translate seem to not exist?
                 TranslateOptions options = TranslateOptions.newBuilder().setApiKey(API_KEY).build();
-                TranslateOptions targetLang = TranslateOptions.newBuilder().setTargetLanguage(targetLanguage).build();
+                //TranslateOptions targetLang = TranslateOptions.newBuilder().setTargetLanguage(targetLanguage).build();
                 Translate translate = options.getService();
-                translate.translate(extractedText, targetLang); //????????????
+                //translate.translate(extractedText, targetLang); //????????????
+                Translation translation= translate.translate(extractedText, Translate.TranslateOption.targetLanguage(targetLanguage));
 
             }
             catch(Exception e){
