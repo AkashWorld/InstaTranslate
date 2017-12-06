@@ -115,7 +115,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("q", extractedText);
-                params.put("target", "de");
+                params.put("target", targetLanguage);
                 params.put("key", RETCONSTANT.API_KEY);
                 return params;
             }
