@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity
     private double current_Lat;
     private double current_Lng;
     private GoogleMap mMap;
+    public String targetLanguage;
     ImageButton picChooser;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,6 +203,11 @@ public class MainActivity extends AppCompatActivity
             }
             Bitmap bmp = BitmapFactory.decodeStream(image_stream);
             actIntent.putExtra(RETCONSTANT.BITMAP,bmp);
+            actIntent.putExtra(RETCONSTANT.CURRLONG, current_Lng);
+            actIntent.putExtra(RETCONSTANT.CURRLAT, current_Lat);
+            //TEMP
+            targetLanguage = "de"; //german
+            actIntent.putExtra(RETCONSTANT.TARGETLANG,targetLanguage);
             startActivity(actIntent);
 
         }

@@ -12,23 +12,36 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.cloud.translate.Detection;
-import com.google.cloud.translate.Language;
 import com.google.cloud.translate.Translate;
+import com.google.cloud.translate.Translate.TranslateOption;
 import com.google.cloud.translate.TranslateOptions;
 import com.google.cloud.translate.Translation;
 
-import java.util.Iterator;
-import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+
+import finalproject.mae.maptranslate.LanguageCode;
 import finalproject.mae.maptranslate.MainActivity;
 import finalproject.mae.maptranslate.R;
 
 public class TranslationActivity extends AppCompatActivity implements View.OnClickListener{
-    private static final String API_KEY = "AIzaSyDyDuLRbiaqxZgpX0yy-03zNoZXTCndi54";
     String targetLanguage;
     Button goodButton;
     Button badButton;
@@ -40,21 +53,27 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     String translatedText;
     TextView detectText;
     String language;
+    double currentLongitude;
+    double currentLatitude;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_translation);
         goodButton = (Button)findViewById(R.id.goodbutt);
         badButton = (Button)findViewById(R.id.badbutt);
+        goodButton.setOnClickListener(this);
+        badButton.setOnClickListener(this);
         origin = (TextView)findViewById(R.id.origText);
         translation = (TextView)findViewById(R.id.translationText);
         image = (ImageView)findViewById(R.id.translationPic);
         detectText = (TextView)findViewById(R.id.detectText);
+        currentLatitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLAT, 0);
+        currentLongitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLONG, 0);
         originalImage = getIntent().getParcelableExtra(RETCONSTANT.BITMAP);
         image.setImageBitmap(originalImage);
-        extractedText = "Original Text: ";
-        translatedText = "Translated Text: ";
-        targetLanguage = "de";
+        extractedText = "";
+        translatedText = "";
+        targetLanguage = getIntent().getStringExtra(RETCONSTANT.TARGETLANG);
         language = "";
         extractTextFromImage();
 
@@ -79,26 +98,72 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     }
 
     public void translateText(){
-     Log.d("translateText", "before Async text");
-     //LAUNCHES TWO ASYNC TASKS TO GET TRANSLATION
-        //language task
-     AsyncTask newTask = new LanguageTask().execute(extractedText);
-        //translation task
-     new TranslateTask().execute(extractedText);
+     RequestQueue queue = Volley.newRequestQueue(this);
+     String url = "https://translation.googleapis.com/language/translate/v2";
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d("Response is", response);
+                try {
+                    JSONObject mainObject = new JSONObject(response);
+                    JSONObject dataobj = mainObject.getJSONObject("data");
+                    JSONArray translationArray = dataobj.getJSONArray("translations");
+                    String tempTranslation = translationArray.getString(0);
+                    getTranslation(tempTranslation);
+
+                }
+                catch(org.json.JSONException e){
+                    e.printStackTrace();
+                    Log.d("JSON","Could not parse json string");
+                    return;
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("Volley", "Error on response");
+            }
+        }){
+            @Override
+            protected Map<String,String> getParams() {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("q", extractedText);
+                params.put("target","de");
+                params.put("key",RETCONSTANT.API_KEY);
+                return params;
+            }
+        };
+        queue.add(stringRequest);
 
     }
 
 
+    private void getTranslation(String JSONstr){
+        Log.d("JSONSTR", JSONstr);
+        Log.d("Translation ends at","" + JSONstr.lastIndexOf("\",\""));
+        int translationEnd = JSONstr.lastIndexOf("\",\"");
+        int translationStart = 19;
+        Log.d("Translation",JSONstr.substring(translationStart,translationEnd));
+        translatedText = JSONstr.substring(translationStart,translationEnd);
+        translation.setText(translatedText);
+    }
 
     public void onClick(View v){
         if(v.getId() == R.id.badbutt){
             //return to map activity
+            Log.d("onClick", "Bad Button Pressed. Start map activity");
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
 
         }
         else if(v.getId() == R.id.goodbutt){
-            //add to database
+            Log.d("onClick", "Good Button Pressed. Add to databse, start map activity");
+            //TODO: add the following params to database
+            //Bitmap originalImage
+            //String translatedText
+            //String targetLanguage
+            //Double currentLongitude
+            //Double currentLatitude
 
 
             //return to map activity
@@ -110,50 +175,5 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
     }
 
-    //Language Asynchronous Task that gets the language of the extracted text
-    class LanguageTask extends AsyncTask<String, String, String>{
-        private Exception exception;
-        protected String doInBackground(String...originalText){
-            Log.d("In AsyncTask", "LanguageTask doInBackground");
-            Detection detector = null;
-            try{
-                TranslateOptions options = TranslateOptions.newBuilder().setApiKey(API_KEY).build();
-                Translate translate = options.getService();
-                detector = translate.detect(extractedText);
 
-            }
-            catch(Exception e){
-                this.exception = e;
-                return null;
-            }
-
-            return detector.getLanguage();
-        }
-        protected void onPostExecute(String res){
-            detectText.setText("Language: " +  res);
-        }
-
-    }
-    //Translate Asynchronous Task that gets the translation of the source text
-    class TranslateTask extends AsyncTask<String, String, String>{
-        protected String doInBackground(String...originalText){
-            Detection detector = null;
-            try{
-                //Not sure what to do here, methods that translate seem to not exist?
-                TranslateOptions options = TranslateOptions.newBuilder().setApiKey(API_KEY).build();
-                TranslateOptions targetLang = TranslateOptions.newBuilder().setTargetLanguage(targetLanguage).build();
-                Translate translate = options.getService();
-                translate.translate(extractedText, targetLang); //????????????
-
-            }
-            catch(Exception e){
-                return null;
-            }
-            return null;
-        }
-        protected void onPostExecute(String res){
-
-        }
-
-    }
 }

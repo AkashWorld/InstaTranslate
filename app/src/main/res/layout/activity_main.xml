@@ -50,6 +50,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@android:drawable/ic_notification_overlay" />
 
+    <ImageButton
+        android:id="@+id/targetLang"
+        android:layout_width="45dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:scaleType="fitXY"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        map:srcCompat="@drawable/settings" />
+
 
 </android.support.constraint.ConstraintLayout>
 
