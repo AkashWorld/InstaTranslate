@@ -40,6 +40,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     TextView translation;
     ImageView image;
     Bitmap originalImage;
+    Uri imageUri;
     String extractedText;
     String translatedText;
     TextView detectText;
@@ -66,6 +67,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         currentLatitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLAT, 0);
         currentLongitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLONG, 0);
         originalImage = getIntent().getParcelableExtra(RETCONSTANT.BITMAP);
+        imageUri = Uri.parse(getIntent().getStringExtra(RETCONSTANT.IMAGEURI));
         image.setImageBitmap(originalImage);
         extractedText = "";
         translatedText = "";
@@ -171,18 +173,16 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     
     private void addToFirebaseDatabase() {
         String id = mDatabase.push().getKey(); // Unique id (primary key)
-        Translation translation = new Translation(targetLanguage, latitude, longitude, id, translatedText);
+        Translation translation = new Translation(targetLanguage, currentLatitude, currentLongitude, id, translatedText);
         mDatabase.child(id).setValue(translation); // Add to DB
         
-        /* Uri image = convert from bitmap (originalImage) */
-        
-        storeImageinStorage(id, image); // Add image to Storage
+        storeImageinStorage(id); // Add image to Storage
         Toast.makeText(this, "Database updated successfully.", Toast.LENGTH_LONG).show();
     }
 
-    private void storeImageinStorage(String id, Uri image) {
+    private void storeImageinStorage(String id) {
         StorageReference path = mStorage.child("images").child(id);
-        path.putFile(image)
+        path.putFile(imageUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
