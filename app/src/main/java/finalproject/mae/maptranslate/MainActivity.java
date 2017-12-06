@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Work with the 'translation' object ...
 
-                    StorageReference path = mStorage.child("photos/"+translation.imageName);
+                    StorageReference path = mStorage.child("images/"+translation.imageName);
 
                     File localFile = null;
                     try {
