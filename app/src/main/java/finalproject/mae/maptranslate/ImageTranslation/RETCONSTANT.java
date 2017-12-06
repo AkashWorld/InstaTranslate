@@ -11,5 +11,6 @@ public  final class RETCONSTANT {
     public static final String CURRLAT = "CURRLAT";
     public static final String CURRLONG = "CURRLONG";
     public static final String BITMAP = "BITMAPIMAGE";
+    public static final String IMAGEURI = "IMAGEURI";
     public static final String TARGETLANG = "TARGETLANGUAGE";
 }

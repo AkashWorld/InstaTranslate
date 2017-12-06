@@ -29,6 +29,10 @@ import finalproject.mae.maptranslate.MainActivity;
 import finalproject.mae.maptranslate.R;
 
 public class TranslationActivity extends AppCompatActivity implements View.OnClickListener {
+
+    DatabaseReference mDatabase;
+    StorageReference mStorage;
+    
     String targetLanguage;
     Button goodButton;
     Button badButton;
@@ -36,6 +40,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     TextView translation;
     ImageView image;
     Bitmap originalImage;
+    Uri imageUri;
     String extractedText;
     String translatedText;
     TextView detectText;
@@ -47,6 +52,10 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_translation);
+        
+        mStorage = FirebaseStorage.getInstance().getReference();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        
         goodButton = (Button) findViewById(R.id.goodbutt);
         badButton = (Button) findViewById(R.id.badbutt);
         goodButton.setOnClickListener(this);
@@ -58,6 +67,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         currentLatitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLAT, 0);
         currentLongitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLONG, 0);
         originalImage = getIntent().getParcelableExtra(RETCONSTANT.BITMAP);
+        imageUri = Uri.parse(getIntent().getStringExtra(RETCONSTANT.IMAGEURI));
         image.setImageBitmap(originalImage);
         extractedText = "";
         translatedText = "";
@@ -150,6 +160,8 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
             //String targetLanguage
             //Double currentLongitude
             //Double currentLatitude
+            
+            addToFirebaseDatabase();
 
 
             //return to map activity
@@ -157,8 +169,32 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
             startActivity(intent);
 
         }
+    }
+    
+    private void addToFirebaseDatabase() {
+        String id = mDatabase.push().getKey(); // Unique id (primary key)
+        Translation translation = new Translation(targetLanguage, currentLatitude, currentLongitude, id, translatedText);
+        mDatabase.child(id).setValue(translation); // Add to DB
+        
+        storeImageinStorage(id); // Add image to Storage
+        Toast.makeText(this, "Database updated successfully.", Toast.LENGTH_LONG).show();
+    }
 
-
+    private void storeImageinStorage(String id) {
+        StorageReference path = mStorage.child("images").child(id);
+        path.putFile(imageUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(getApplicationContext(), "Storage updated successfully.", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 }
 
