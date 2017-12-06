@@ -205,6 +205,7 @@ public class MainActivity extends AppCompatActivity
             actIntent.putExtra(RETCONSTANT.BITMAP,bmp);
             actIntent.putExtra(RETCONSTANT.CURRLONG, current_Lng);
             actIntent.putExtra(RETCONSTANT.CURRLAT, current_Lat);
+            actIntent.putExtra(RETCONSTANT.IMAGEURI, data.getData().toString());
             //TEMP
             targetLanguage = "de"; //german
             actIntent.putExtra(RETCONSTANT.TARGETLANG,targetLanguage);
