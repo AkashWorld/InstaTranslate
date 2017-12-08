@@ -59,8 +59,7 @@ public class MainActivity extends AppCompatActivity
         implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener {
 
 
-    private static final int GPS_REQUEST = 739;
-    private static final int NETWORK_REQUEST = 951;
+
     private FusedLocationProviderClient fusedLocationClient;
     private double current_Lat;
     private double current_Lng;
@@ -80,6 +79,8 @@ public class MainActivity extends AppCompatActivity
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mf.getView().setClickable(true);
         mf.getMapAsync(this);
+
+
 
     }
 
@@ -116,8 +117,7 @@ public class MainActivity extends AppCompatActivity
 
 //                mStorage = FirebaseStorage.getInstance().getReference();
 //                mDatabase = FirebaseDatabase.getInstance().getReference();
-//
-//                mDatabase.equalTo(targetLanguage,"target");
+
             }
 
             @Override
@@ -145,6 +145,8 @@ public class MainActivity extends AppCompatActivity
         catch (SecurityException e)
         {
             Toast.makeText(this,"Permission Denied",Toast.LENGTH_SHORT).show();
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(1);
         }
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -165,41 +167,46 @@ public class MainActivity extends AppCompatActivity
 
     private void location_initialize()
     {
-        if(ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions( this, new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION},GPS_REQUEST);
-        if(ContextCompat.checkSelfPermission( getApplicationContext(), Manifest.permission.INTERNET ) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions( this, new String[] {android.Manifest.permission.INTERNET},NETWORK_REQUEST);
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if(location!=null)
-                {
-                    get_current_location(location);
-                }
-            }
-        });
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(1000);
-        locationRequest.setFastestInterval(500);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationCallback locationCallback=new LocationCallback()
+        try
         {
-            @Override
-            public void onLocationResult(final LocationResult locationResult)
-            {
-                for(Location location: locationResult.getLocations())
-                {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
                     if(location!=null)
+                    {
                         get_current_location(location);
-                    else
-                        break;
+                    }
                 }
-            }
-        };
-        fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback,null);
+            });
+            LocationRequest locationRequest = new LocationRequest();
+            locationRequest.setInterval(1000);
+            locationRequest.setFastestInterval(500);
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+            LocationCallback locationCallback=new LocationCallback()
+            {
+                @Override
+                public void onLocationResult(final LocationResult locationResult)
+                {
+                    for(Location location: locationResult.getLocations())
+                    {
+                        if(location!=null)
+                            get_current_location(location);
+                        else
+                            break;
+                    }
+                }
+            };
+            fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback,null);
+        }
+        catch (SecurityException e)
+        {
+            Toast.makeText(this,"Permission Denied",Toast.LENGTH_SHORT).show();
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(1);
+        }
+
     }
 
 
