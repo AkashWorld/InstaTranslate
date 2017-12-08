@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         picChooser = (ImageButton)findViewById(R.id.takePicButton);
         picChooser.setOnClickListener(this);
+        targetLanguage = "";
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mf.getView().setClickable(true);
         mf.getMapAsync(this);
@@ -206,8 +207,10 @@ public class MainActivity extends AppCompatActivity
             actIntent.putExtra(RETCONSTANT.CURRLONG, current_Lng);
             actIntent.putExtra(RETCONSTANT.CURRLAT, current_Lat);
             actIntent.putExtra(RETCONSTANT.IMAGEURI, data.getData().toString());
-            //TEMP
-            targetLanguage = "de"; //german
+            if(targetLanguage.equals("")){
+                Log.d("TargetLanguage ERROR", "Custom target language not found!");
+                targetLanguage = "de"; //german for demo purposes
+            }
             actIntent.putExtra(RETCONSTANT.TARGETLANG,targetLanguage);
             startActivity(actIntent);
 

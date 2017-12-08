@@ -2,17 +2,17 @@ package finalproject.mae.maptranslate;
 
 import android.net.Uri;
 
-public class Translation {
+public class TranslationFB {
     String targetLanguage;
     Double latitude;
     Double longitude;
     String imageName;
     String translatedText;
 
-    public Translation() {
+    public TranslationFB() {
     }
 
-    public Translation(String targetLanguage, Double latitude, Double longitude, String  imageName, String translatedText) {
+    public TranslationFB(String targetLanguage, Double latitude, Double longitude, String  imageName, String translatedText) {
         this.targetLanguage = targetLanguage;
         this.latitude = latitude;
         this.longitude = longitude;
