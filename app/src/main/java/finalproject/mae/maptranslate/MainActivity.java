@@ -6,6 +6,7 @@ package finalproject.mae.maptranslate;
 import android.Manifest;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,11 +19,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 
 import finalproject.mae.maptranslate.ImageTranslation.RETCONSTANT;
 import finalproject.mae.maptranslate.ImageTranslation.TranslationActivity;
 
+import android.widget.Spinner;
 import android.widget.Toast;
 
 
@@ -39,33 +43,44 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.util.List;
+import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity
         implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener {
 
 
-    private static final int GPS_REQUEST = 739;
-    private static final int NETWORK_REQUEST = 951;
+
     private FusedLocationProviderClient fusedLocationClient;
     private double current_Lat;
     private double current_Lng;
     private GoogleMap mMap;
     public String targetLanguage;
+    private LanguageCode languageCode=new LanguageCode();
     ImageButton picChooser;
+    DatabaseReference mDatabase;
+    StorageReference mStorage;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        picChooser = (ImageButton)findViewById(R.id.takePicButton);
-        picChooser.setOnClickListener(this);
+
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mf.getView().setClickable(true);
         mf.getMapAsync(this);
+
+
 
     }
 
@@ -73,6 +88,7 @@ public class MainActivity extends AppCompatActivity
     public void onMapReady(GoogleMap gmap)
     {
         map_initialize(gmap);
+        ui_initialize();
         location_initialize();
         mMap.setOnMapLoadedCallback(this);
     }
@@ -83,6 +99,40 @@ public class MainActivity extends AppCompatActivity
         ;
     }
 
+    private void ui_initialize()
+    {
+        Spinner choose_targlang=findViewById(R.id.choose_targlang);
+        List<String> languageList=languageCode.getLanguageList();
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,languageList);
+        choose_targlang.setAdapter(adapter);
+        choose_targlang.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+                SharedPreferences prefs = getSharedPreferences("TargetLanguage",MODE_PRIVATE);
+                SharedPreferences.Editor prefsEditor = prefs.edit();
+                prefsEditor.putInt("targlang",i);
+                prefsEditor.commit();
+                targetLanguage=languageCode.getLanguageCode(getApplicationContext(),i);
+
+//                mStorage = FirebaseStorage.getInstance().getReference();
+//                mDatabase = FirebaseDatabase.getInstance().getReference();
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        SharedPreferences load_pref= getSharedPreferences("TargetLanguage",MODE_PRIVATE);
+        int index=load_pref.getInt("targlang",20);
+        choose_targlang.setSelection(index);
+
+        picChooser = (ImageButton)findViewById(R.id.takePicButton);
+        picChooser.setOnClickListener(this);
+    }
 
     private void map_initialize(GoogleMap map)
     {
@@ -95,6 +145,8 @@ public class MainActivity extends AppCompatActivity
         catch (SecurityException e)
         {
             Toast.makeText(this,"Permission Denied",Toast.LENGTH_SHORT).show();
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(1);
         }
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -115,41 +167,46 @@ public class MainActivity extends AppCompatActivity
 
     private void location_initialize()
     {
-        if(ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions( this, new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION},GPS_REQUEST);
-        if(ContextCompat.checkSelfPermission( getApplicationContext(), Manifest.permission.INTERNET ) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions( this, new String[] {android.Manifest.permission.INTERNET},NETWORK_REQUEST);
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if(location!=null)
-                {
-                    get_current_location(location);
-                }
-            }
-        });
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(1000);
-        locationRequest.setFastestInterval(500);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationCallback locationCallback=new LocationCallback()
+        try
         {
-            @Override
-            public void onLocationResult(final LocationResult locationResult)
-            {
-                for(Location location: locationResult.getLocations())
-                {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
                     if(location!=null)
+                    {
                         get_current_location(location);
-                    else
-                        break;
+                    }
                 }
-            }
-        };
-        fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback,null);
+            });
+            LocationRequest locationRequest = new LocationRequest();
+            locationRequest.setInterval(1000);
+            locationRequest.setFastestInterval(500);
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+            LocationCallback locationCallback=new LocationCallback()
+            {
+                @Override
+                public void onLocationResult(final LocationResult locationResult)
+                {
+                    for(Location location: locationResult.getLocations())
+                    {
+                        if(location!=null)
+                            get_current_location(location);
+                        else
+                            break;
+                    }
+                }
+            };
+            fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback,null);
+        }
+        catch (SecurityException e)
+        {
+            Toast.makeText(this,"Permission Denied",Toast.LENGTH_SHORT).show();
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(1);
+        }
+
     }
 
 
