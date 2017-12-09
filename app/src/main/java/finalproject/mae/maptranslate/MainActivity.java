@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+        // Use this while retrieving from DB
         mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             // Called everytime DB changes
@@ -70,28 +71,26 @@ public class MainActivity extends AppCompatActivity {
 
                     // Work with the 'translation' object ...
 
-                    StorageReference path = mStorage.child("images/"+translation.imageName);
+                    // Download url of image from Firebase Storage and set to imageView using Picasso
+                    mStorage.child("images/"+translation.imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
 
-                    File localFile = null;
-                    try {
-                        localFile = File.createTempFile(translation.imageName, "");
-                        path.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                            @Override
-                            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                // Local temp file has been created
+                            // Get reference to imageView: ImageView imageView = (ImageView)findViewById(R.id.imageView);
 
-                                // Work with the image here ...
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception exception) {
-                                // Handle any errors
-                            }
-                        });
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
+                            // Set url to imageView like so:
+                            /* 
+                            Picasso.with(MainActivity.this)
+                                    .load(uri)
+                                    .into(imageView);
+                            */
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle any errors
+                        }
+                    });
                 }
             }
 
