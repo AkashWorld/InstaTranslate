@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 import finalproject.mae.maptranslate.MainActivity;
 import finalproject.mae.maptranslate.R;
-import finalproject.mae.maptranslate.TranslationFB;
+
 
 public class TranslationActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -64,10 +64,10 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_translation);
-        
+        /*
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        
+        */
         goodButton = (Button) findViewById(R.id.goodbutt);
         badButton = (Button) findViewById(R.id.badbutt);
         goodButton.setOnClickListener(this);
@@ -118,8 +118,11 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
                     JSONObject mainObject = new JSONObject(response);
                     JSONObject dataobj = mainObject.getJSONObject("data");
                     JSONArray translationArray = dataobj.getJSONArray("translations");
-                    String tempTranslation = translationArray.getString(0);
-                    getTranslation(tempTranslation);
+                    JSONObject translationObj = translationArray.getJSONObject(0);
+                    translatedText =  translationObj.getString("translatedText");
+                    String srcLang = translationObj.getString("detectedSourceLanguage");
+                    detectText.setText("Original Text Language: " + srcLang);
+                    translation.setText(translatedText);
 
                 } catch (org.json.JSONException e) {
                     e.printStackTrace();
@@ -147,15 +150,6 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-    private void getTranslation(String JSONstr) {
-        Log.d("JSONSTR", JSONstr);
-        Log.d("Translation ends at", "" + JSONstr.lastIndexOf("\",\""));
-        int translationEnd = JSONstr.lastIndexOf("\",\"");
-        int translationStart = 19;
-        Log.d("Translation", JSONstr.substring(translationStart, translationEnd));
-        translatedText = JSONstr.substring(translationStart, translationEnd);
-        translation.setText(translatedText);
-    }
 
     public void onClick(View v) {
         if (v.getId() == R.id.badbutt) {

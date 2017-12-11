@@ -1,5 +1,4 @@
-package finalproject.mae.maptranslate;
-
+package finalproject.mae.maptranslate.ImageTranslation;
 import android.net.Uri;
 
 public class TranslationFB {
