@@ -35,7 +35,6 @@ public class LanguageCode {
         languageName = new ArrayList<>();
         languageCode = new ArrayList<>();
         Log.d("getLanguageCode", "in Static method");
-        final List<String> languageCode = new ArrayList<>();
         RequestQueue queue = Volley.newRequestQueue(context);
         String url = "https://translation.googleapis.com/language/translate/v2/languages";
         url = url + "?key=" + RETCONSTANT.API_KEY +"&target=en";
@@ -51,6 +50,7 @@ public class LanguageCode {
                         JSONObject langPair = langArray.getJSONObject(i);
                         languageName.add(langPair.getString("name"));
                         languageCode.add(langPair.getString("language"));
+                        Log.d("LanguageCode",""+languageCode.size());
                     }
                     flag=true;
                 }

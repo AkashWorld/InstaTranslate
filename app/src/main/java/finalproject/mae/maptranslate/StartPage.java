@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.api.client.json.Json;
@@ -66,7 +67,7 @@ public class StartPage extends AppCompatActivity {
             while(!languageCode.flag) ;
             targetLanguage=languageCode.getLanguageList();
             targetCode=languageCode.getLanguageCode();
-
+            Log.d("LanguageCode","Start: "+targetCode.size());
             Intent intent=new Intent(getApplicationContext(),MainActivity.class);
             Gson gson=new Gson();
             String language=gson.toJson(targetLanguage);

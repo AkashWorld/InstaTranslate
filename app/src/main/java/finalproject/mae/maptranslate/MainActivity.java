@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity
         Log.d("Spinner", "Item:" + position + " selected!");
         SharedPreferences prefs = getSharedPreferences("TargetLanguage", MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = prefs.edit();
-        targetLanguage = targetCode.get(position);
+//        targetLanguage = targetCode.get(position);
         prefsEditor.putString(RETCONSTANT.SHAREDPREFTARGETLANG, targetLanguage);
         prefsEditor.commit();
 
@@ -217,6 +217,7 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
             };
+
             fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback,null);
         }
         catch (SecurityException e)
