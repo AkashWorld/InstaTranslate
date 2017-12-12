@@ -28,7 +28,10 @@ import finalproject.mae.maptranslate.ImageTranslation.RETCONSTANT;
 public class LanguageCode {
     List<String> languageName;
     List<String> languageCode;
-    public List<String> getLanguageList(Context context){
+    boolean flag=false;
+
+    public LanguageCode(Context context)
+    {
         languageName = new ArrayList<>();
         languageCode = new ArrayList<>();
         Log.d("getLanguageCode", "in Static method");
@@ -49,6 +52,7 @@ public class LanguageCode {
                         languageName.add(langPair.getString("name"));
                         languageCode.add(langPair.getString("language"));
                     }
+                    flag=true;
                 }
                 catch(org.json.JSONException e){
                     e.printStackTrace();
@@ -62,10 +66,11 @@ public class LanguageCode {
             }
         });
         queue.add(stringRequest);
-        return languageName;
     }
 
-    public String getLanguageCode(int i){
-        return languageCode.get(i);
+    public List<String> getLanguageList() { return languageName; }
+
+    public List<String> getLanguageCode(){
+        return languageCode;
     }
 }

@@ -47,10 +47,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.gson.Gson;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -65,25 +67,28 @@ public class MainActivity extends AppCompatActivity
     private double current_Lng;
     private GoogleMap mMap;
     public String targetLanguage;
-    private LanguageCode languageCode;
     ImageButton picChooser;
     DatabaseReference mDatabase;
     StorageReference mStorage;
+    private List<String> targetCode;
+    private List<String> languageList;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        picChooser = (ImageButton)findViewById(R.id.takePicButton);
-        picChooser.setOnClickListener(this);
+//        getWindow().getDecorView().setSystemUiVisibility(
+//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+//                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
+
+
+
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mf.getView().setClickable(true);
         mf.getMapAsync(this);
@@ -112,14 +117,22 @@ public class MainActivity extends AppCompatActivity
     {
         Log.d("ui_initialize","initializing the User Interface");
         Spinner choose_targlang=findViewById(R.id.choose_targlang);
-        languageCode = new LanguageCode();
-        List<String> languageList= languageCode.getLanguageList(this);
+
+        Gson gson=new Gson();
+        Intent intent=getIntent();
+        String language=intent.getStringExtra("Language List");
+        String code=intent.getStringExtra("Code List");
+        languageList= gson.fromJson(language,new ArrayList<String>().getClass());
+        targetCode=gson.fromJson(code,new ArrayList<String>().getClass());
         Log.d("Size of Language List","" + languageList.size());
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,languageList);
         choose_targlang.setAdapter(adapter);
         choose_targlang.setOnItemSelectedListener(this);
         SharedPreferences load_pref = getSharedPreferences("TargetLanguage",MODE_PRIVATE);
-        int index = load_pref.getInt(RETCONSTANT.SHAREDPREFTARGETLANG,20);
+        targetLanguage = load_pref.getString("TargetLanguage","en");
+        int index=targetCode.indexOf(targetLanguage);
+        if(index==-1)
+            index=targetCode.indexOf("en");
         choose_targlang.setSelection(index);
         picChooser = (ImageButton)findViewById(R.id.takePicButton);
         picChooser.setOnClickListener(this);
@@ -129,9 +142,10 @@ public class MainActivity extends AppCompatActivity
         Log.d("Spinner", "Item:" + position + " selected!");
         SharedPreferences prefs = getSharedPreferences("TargetLanguage", MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = prefs.edit();
-        prefsEditor.putInt(RETCONSTANT.SHAREDPREFTARGETLANG, position);
+        targetLanguage = targetCode.get(position);
+        prefsEditor.putString(RETCONSTANT.SHAREDPREFTARGETLANG, targetLanguage);
         prefsEditor.commit();
-        targetLanguage = languageCode.getLanguageCode(position);
+
         Log.d("Target Language Code", targetLanguage);
     }
 
