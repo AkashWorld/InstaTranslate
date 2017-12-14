@@ -36,6 +36,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -67,6 +68,13 @@ public class MainActivity extends AppCompatActivity
     private double current_Lng;
     private GoogleMap mMap;
     public String targetLanguage;
+    private double marker_Lat;
+    private double marker_Lng;
+    float[] results;
+    LatLng LL;
+    Translation locInfo = new Translation();
+    String marker_Image;
+    String marker_Text;
     ImageButton picChooser;
     DatabaseReference mDatabase;
     StorageReference mStorage;
@@ -103,6 +111,7 @@ public class MainActivity extends AppCompatActivity
         map_initialize(gmap);
         ui_initialize();
         location_initialize();
+        //mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(MainActivity.this));
         mMap.setOnMapLoadedCallback(this);
     }
 
@@ -212,6 +221,7 @@ public class MainActivity extends AppCompatActivity
                     {
                         if(location!=null)
                             get_current_location(location);
+                            //addMarkers(location);
                         else
                             break;
                     }
@@ -229,6 +239,20 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+        private void addMarkers(Location location){
+        for(int i=0;i<100;i++) {
+            //locInfo = Object.   Get object from database
+            marker_Lat = locInfo.getLatitude();
+            marker_Lng = locInfo.getLongitude();
+            LL = new LatLng(marker_Lat,marker_Lng);
+            marker_Image = locInfo.imageName();
+            marker_Text = locInfo.getTranslatedText();
+            location.distanceBetween(location.getLatitude(),location.getLongitude(),marker_Lat,marker_Lng,results);
+            if(results[0]<10) {
+                Marker marker = mMap.addMarker(new MarkerOptions().position(LL));
+            }
+        }
+    }
 
     private void get_current_location(Location loc)
     {
