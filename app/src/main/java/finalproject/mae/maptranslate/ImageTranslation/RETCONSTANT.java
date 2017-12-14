@@ -13,4 +13,5 @@ public  final class RETCONSTANT {
     public static final String BITMAP = "BITMAPIMAGE";
     public static final String IMAGEURI = "IMAGEURI";
     public static final String TARGETLANG = "TARGETLANGUAGE";
+    public static final String SHAREDPREFTARGETLANG = "SHAREDPREFTARGETLANGUAGE";
 }
