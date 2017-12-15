@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.renderscript.ScriptGroup;
 import android.support.v4.app.ActivityCompat;
@@ -25,6 +26,7 @@ import android.widget.ImageButton;
 
 import finalproject.mae.maptranslate.ImageTranslation.RETCONSTANT;
 import finalproject.mae.maptranslate.ImageTranslation.TranslationActivity;
+import finalproject.mae.maptranslate.ImageTranslation.TranslationFB;
 
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -43,9 +45,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
@@ -59,27 +66,27 @@ import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener{
-
+        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,ChildEventListener{
 
 
     private FusedLocationProviderClient fusedLocationClient;
     private double current_Lat;
     private double current_Lng;
+
+
     private GoogleMap mMap;
+    private ArrayList<Marker> marker_list=new ArrayList<Marker>();
+
+
     public String targetLanguage;
-    private double marker_Lat;
-    private double marker_Lng;
-    float[] results;
-    LatLng LL;
-    Translation locInfo = new Translation();
-    String marker_Image;
-    String marker_Text;
-    ImageButton picChooser;
-    DatabaseReference mDatabase;
-    StorageReference mStorage;
     private List<String> targetCode;
     private List<String> languageList;
+
+
+    DatabaseReference mDatabase;
+    StorageReference mStorage;
+    private DatabaseReference ref;
+
 
 
     @Override
@@ -111,6 +118,7 @@ public class MainActivity extends AppCompatActivity
         map_initialize(gmap);
         ui_initialize();
         location_initialize();
+        database_initialize();
         //mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(MainActivity.this));
         mMap.setOnMapLoadedCallback(this);
     }
@@ -125,8 +133,6 @@ public class MainActivity extends AppCompatActivity
     private void ui_initialize()
     {
         Log.d("ui_initialize","initializing the User Interface");
-        Spinner choose_targlang=findViewById(R.id.choose_targlang);
-
         Gson gson=new Gson();
         Intent intent=getIntent();
         String language=intent.getStringExtra("Language List");
@@ -134,6 +140,8 @@ public class MainActivity extends AppCompatActivity
         languageList= gson.fromJson(language,new ArrayList<String>().getClass());
         targetCode=gson.fromJson(code,new ArrayList<String>().getClass());
         Log.d("Size of Language List","" + languageList.size());
+
+        Spinner choose_targlang=findViewById(R.id.choose_targlang);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,languageList);
         choose_targlang.setAdapter(adapter);
         choose_targlang.setOnItemSelectedListener(this);
@@ -143,7 +151,9 @@ public class MainActivity extends AppCompatActivity
         if(index==-1)
             index=targetCode.indexOf("en");
         choose_targlang.setSelection(index);
-        picChooser = (ImageButton)findViewById(R.id.takePicButton);
+
+
+        ImageButton picChooser = (ImageButton)findViewById(R.id.takePicButton);
         picChooser.setOnClickListener(this);
     }
 
@@ -151,7 +161,7 @@ public class MainActivity extends AppCompatActivity
         Log.d("Spinner", "Item:" + position + " selected!");
         SharedPreferences prefs = getSharedPreferences("TargetLanguage", MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = prefs.edit();
-//        targetLanguage = targetCode.get(position);
+        targetLanguage = targetCode.get(position);
         prefsEditor.putString(RETCONSTANT.SHAREDPREFTARGETLANG, targetLanguage);
         prefsEditor.commit();
 
@@ -176,6 +186,9 @@ public class MainActivity extends AppCompatActivity
             android.os.Process.killProcess(android.os.Process.myPid());
             System.exit(1);
         }
+
+        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(this));
+
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
@@ -202,9 +215,7 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onSuccess(Location location) {
                     if(location!=null)
-                    {
                         get_current_location(location);
-                    }
                 }
             });
             LocationRequest locationRequest = new LocationRequest();
@@ -220,8 +231,10 @@ public class MainActivity extends AppCompatActivity
                     for(Location location: locationResult.getLocations())
                     {
                         if(location!=null)
+                        {
                             get_current_location(location);
-                            //addMarkers(location);
+                            addMarkers(location);
+                        }
                         else
                             break;
                     }
@@ -239,19 +252,16 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-        private void addMarkers(Location location){
-        for(int i=0;i<100;i++) {
-            //locInfo = Object.   Get object from database
-            marker_Lat = locInfo.getLatitude();
-            marker_Lng = locInfo.getLongitude();
-            LL = new LatLng(marker_Lat,marker_Lng);
-            marker_Image = locInfo.imageName();
-            marker_Text = locInfo.getTranslatedText();
-            location.distanceBetween(location.getLatitude(),location.getLongitude(),marker_Lat,marker_Lng,results);
-            if(results[0]<10) {
-                Marker marker = mMap.addMarker(new MarkerOptions().position(LL));
-            }
-        }
+    private void database_initialize()
+    {
+        mStorage = FirebaseStorage.getInstance().getReference();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        ref=mDatabase.getRef();
+        ref.addChildEventListener(this);
+    }
+
+    private void addMarkers(Location location){
+        ref.equalTo(targetLanguage,"targetLanguage");
     }
 
     private void get_current_location(Location loc)
@@ -316,6 +326,73 @@ public class MainActivity extends AppCompatActivity
             startActivity(actIntent);
 
         }
+    }
+
+    private class add_marker_task extends AsyncTask<LatLng,LatLng,LatLng>
+    {
+        @Override
+        protected LatLng doInBackground(LatLng  ... latLng)
+        {
+            boolean merged=false;
+
+            for(Marker marker:marker_list)
+            {
+                double lat=marker.getPosition().latitude;
+                double lng=marker.getPosition().longitude;
+                float[] result=new float[1];
+                Location.distanceBetween(lat,lng,latLng[0].latitude,latLng[0].longitude,result);
+                if(result[0]<=10)
+                {
+                    merged = true;
+                    break;
+                }
+            }
+
+            if(!merged)
+            {
+                Marker marker=mMap.addMarker(new MarkerOptions().position(latLng[0]));
+                marker_list.add(marker);
+            }
+
+            return  null;
+
+        }
+    }
+
+    @Override
+    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+        TranslationFB translationFB = dataSnapshot.getValue(TranslationFB.class);
+        double marker_Lat = translationFB.getLatitude();
+        double marker_Lng = translationFB.getLongitude();
+        LatLng LL = new LatLng(marker_Lat,marker_Lng);
+        String marker_Image = translationFB.imageName();
+        String marker_Text = translationFB.getTranslatedText();
+        float results[]=new float[1];
+        Location.distanceBetween(current_Lat,current_Lng,marker_Lat,marker_Lng,results);
+        if(results[0]<=100)
+        {
+            new add_marker_task().execute(LL);
+        }
+
+    }
+
+    @Override
+    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+    }
+
+    @Override
+    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onCancelled(DatabaseError databaseError) {
 
     }
 
