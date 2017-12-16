@@ -74,7 +74,6 @@ public class StartPage extends AppCompatActivity {
             String code=gson.toJson(targetCode);
             intent.putExtra("Language List",language);
             intent.putExtra("Code List",code);
-            intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
             startActivity(intent);
             finish();
             return null;
