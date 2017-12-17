@@ -69,10 +69,10 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_translation);
-        /*
+
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        */
+
         goodButton = (Button) findViewById(R.id.goodbutt);
         badButton = (Button) findViewById(R.id.badbutt);
         goodButton.setOnClickListener(this);
@@ -184,7 +184,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
 
             //return to map activity
-            Intent intent = new Intent(this,StartPage.class);
+            Intent intent = new Intent(this, StartPage.class);
             startActivity(intent);
 
         }
@@ -194,7 +194,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         String id = mDatabase.push().getKey(); // Unique id (primary key)
         TranslationFB translation = new TranslationFB(targetLanguage, currentLatitude, currentLongitude, id, translatedText);
         mDatabase.child(id).setValue(translation); // Add to DB
-        
+
         storeImageinStorage(id); // Add image to Storage
         Toast.makeText(this, "Database updated successfully.", Toast.LENGTH_LONG).show();
     }
