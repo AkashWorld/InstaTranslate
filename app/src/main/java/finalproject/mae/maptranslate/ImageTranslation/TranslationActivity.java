@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,10 +35,13 @@ import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import finalproject.mae.maptranslate.MainActivity;
 import finalproject.mae.maptranslate.R;
+import finalproject.mae.maptranslate.StartPage;
 
 
 public class TranslationActivity extends AppCompatActivity implements View.OnClickListener {
@@ -50,6 +54,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     Button badButton;
     TextView origin;
     TextView translation;
+    TextView translatedTargetLang;
     ImageView image;
     Bitmap originalImage;
     Uri imageUri;
@@ -74,16 +79,23 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         badButton.setOnClickListener(this);
         origin = (TextView) findViewById(R.id.origText);
         translation = (TextView) findViewById(R.id.translationText);
+        translatedTargetLang = (TextView) findViewById(R.id.TranslatedTextLang);
         image = (ImageView) findViewById(R.id.translationPic);
         detectText = (TextView) findViewById(R.id.detectText);
         currentLatitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLAT, 0);
         currentLongitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLONG, 0);
-        originalImage = getIntent().getParcelableExtra(RETCONSTANT.BITMAP);
         imageUri = Uri.parse(getIntent().getStringExtra(RETCONSTANT.IMAGEURI));
-        image.setImageBitmap(originalImage);
+        try {
+            originalImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            image.setImageBitmap(originalImage);
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
         extractedText = "";
         translatedText = "";
         targetLanguage = getIntent().getStringExtra(RETCONSTANT.TARGETLANG);
+        Log.d("TranslationActivity","Target Language = " +targetLanguage);
         language = "";
         extractTextFromImage();
 
@@ -123,6 +135,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
                     String srcLang = translationObj.getString("detectedSourceLanguage");
                     detectText.setText("Original Text Language: " + srcLang);
                     translation.setText(translatedText);
+                    translatedTargetLang.setText("Translated Text Language: " + targetLanguage);
 
                 } catch (org.json.JSONException e) {
                     e.printStackTrace();
@@ -155,7 +168,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         if (v.getId() == R.id.badbutt) {
             //return to map activity
             Log.d("onClick", "Bad Button Pressed. Start map activity");
-            Intent intent = new Intent(this, MainActivity.class);
+            Intent intent = new Intent(this, StartPage.class);
             startActivity(intent);
 
         } else if (v.getId() == R.id.goodbutt) {
@@ -171,7 +184,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
 
             //return to map activity
-            Intent intent = new Intent(this, MainActivity.class);
+            Intent intent = new Intent(this,StartPage.class);
             startActivity(intent);
 
         }

@@ -36,7 +36,7 @@
         android:layout_marginTop="8dp"
         android:text="TextView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/TranslatedTextLang" />
 
     <Button
         android:id="@+id/goodbutt"
@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginStart="8dp"
-        android:text="GOOD"
+        android:text="Yes"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -54,7 +54,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
-        android:text="BAD"
+        android:text="No"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -69,7 +69,7 @@
         app:layout_constraintTop_toBottomOf="@+id/translationPic" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/TranslatedTextLang"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -77,4 +77,16 @@
         android:text="Translated Text:"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/origText" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="Was this translation helpful?"
+        app:layout_constraintBottom_toTopOf="@+id/goodbutt"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </android.support.constraint.ConstraintLayout>

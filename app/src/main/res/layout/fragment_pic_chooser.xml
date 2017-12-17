@@ -3,30 +3,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="finalproject.mae.maptranslate.ImageTranslation.PicChooserFrag">
+    tools:context="finalproject.mae.maptranslate.TakePicFragment"
+    tools:layout_editor_absoluteY="81dp">
 
     <!-- TODO: Update blank fragment layout -->
 
     <ImageButton
         android:id="@+id/gallery"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="132dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginStart="120dp"
         android:layout_marginTop="16dp"
-        android:src="@android:drawable/ic_menu_slideshow"
+        android:backgroundTint="@color/cast_intro_overlay_background_color"
+        android:scaleType="centerCrop"
+        android:src="@drawable/choosegal"
+        app:layout_constraintEnd_toStartOf="@+id/camera"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="120dp"
+        android:layout_marginStart="20dp"
         android:layout_marginTop="16dp"
-        android:src="@android:drawable/ic_menu_camera"
+        android:backgroundTint="@color/cast_intro_overlay_background_color"
+        android:scaleType="centerCrop"
+        android:src="@drawable/choosecam"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.159"
         app:layout_constraintStart_toEndOf="@+id/gallery"
         app:layout_constraintTop_toTopOf="parent" />
 </android.support.constraint.ConstraintLayout>

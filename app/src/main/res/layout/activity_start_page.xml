@@ -4,15 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:theme="@style/StartPageTheme"
     tools:context="finalproject.mae.maptranslate.StartPage">
 
     <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:id="@+id/startPageIV"
+        android:layout_width="592dp"
+        android:layout_height="765dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:drawable/sym_def_app_icon" />
+        app:layout_constraintVertical_bias="0.299"
+        app:srcCompat="@drawable/splashpage" />
 </android.support.constraint.ConstraintLayout>

@@ -1,18 +1,19 @@
 package finalproject.mae.maptranslate;
 
-import android.*;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.api.client.json.Json;
 import com.google.gson.Gson;
 
 import java.util.List;
@@ -27,7 +28,6 @@ public class StartPage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_page);
-
 
         if(ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION  )!= PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.INTERNET ) != PackageManager.PERMISSION_GRANTED
@@ -74,7 +74,6 @@ public class StartPage extends AppCompatActivity {
             String code=gson.toJson(targetCode);
             intent.putExtra("Language List",language);
             intent.putExtra("Code List",code);
-            intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
             startActivity(intent);
             finish();
             return null;

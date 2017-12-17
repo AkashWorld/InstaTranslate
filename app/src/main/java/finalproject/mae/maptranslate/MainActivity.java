@@ -4,6 +4,7 @@ package finalproject.mae.maptranslate;
  */
 
 import android.Manifest;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,10 +12,13 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.renderscript.ScriptGroup;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -49,19 +53,20 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener{
-
-
-
+        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,TakePicFragment.OnFragmentInteractionListener{
     private FusedLocationProviderClient fusedLocationClient;
     private double current_Lat;
     private double current_Lng;
@@ -78,16 +83,6 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        getWindow().getDecorView().setSystemUiVisibility(
-//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-//                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-//                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
-
-
 
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mf.getView().setClickable(true);
@@ -129,8 +124,9 @@ public class MainActivity extends AppCompatActivity
         choose_targlang.setAdapter(adapter);
         choose_targlang.setOnItemSelectedListener(this);
         SharedPreferences load_pref = getSharedPreferences("TargetLanguage",MODE_PRIVATE);
-        targetLanguage = load_pref.getString("TargetLanguage","en");
-        int index=targetCode.indexOf(targetLanguage);
+        targetLanguage = load_pref.getString(RETCONSTANT.SHAREDPREFTARGETLANG,"en");
+        Log.d("Loaded from Preferences", targetLanguage);
+        int index= targetCode.indexOf(targetLanguage);
         if(index==-1)
             index=targetCode.indexOf("en");
         choose_targlang.setSelection(index);
@@ -142,10 +138,9 @@ public class MainActivity extends AppCompatActivity
         Log.d("Spinner", "Item:" + position + " selected!");
         SharedPreferences prefs = getSharedPreferences("TargetLanguage", MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = prefs.edit();
-//        targetLanguage = targetCode.get(position);
+        targetLanguage = targetCode.get(position);
         prefsEditor.putString(RETCONSTANT.SHAREDPREFTARGETLANG, targetLanguage);
         prefsEditor.commit();
-
         Log.d("Target Language Code", targetLanguage);
     }
 
@@ -155,6 +150,7 @@ public class MainActivity extends AppCompatActivity
 
     private void map_initialize(GoogleMap map)
     {
+        Log.d("map_initialize", "Initializing map settings");
         mMap=map;
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         try
@@ -239,47 +235,75 @@ public class MainActivity extends AppCompatActivity
 
     public void onClick(View v){
         if(v.getId() == R.id.takePicButton){
-            cameraIntent();
+            TakePicFragment picFragment = new TakePicFragment();
+            FragmentManager manager = getFragmentManager();
+            FragmentTransaction transaction = manager.beginTransaction();
+            transaction.add(R.id.framePicChooser,picFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         }
     }
 
 
+    public void FragmentResponse(int flag){
+        if(flag == RETCONSTANT.GALLERY){
+            galleryIntent();
+        }
+        else if(flag == RETCONSTANT.CAMERA){
+            cameraIntent();
+        }
+    }
+
     public void cameraIntent(){
-        Intent pickIntent = new Intent();
-        pickIntent.setType("image/*");
-        pickIntent.setAction(Intent.ACTION_GET_CONTENT);
+        Log.d("Camera Intent","Response Recieved");
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                ex.printStackTrace();
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "finalproject.mae.maptranslate",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, RETCONSTANT.CAMERA);
+            }
+        }
+    }
 
-        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        String pickTitle = "Select or take a new Picture"; // Or get from strings.xml
-        Intent chooserIntent = Intent.createChooser(pickIntent, pickTitle);
-        chooserIntent.putExtra
-                (
-                        Intent.EXTRA_INITIAL_INTENTS,
-                        new Intent[] { takePhotoIntent }
-                );
-
-        startActivityForResult(chooserIntent, RETCONSTANT.CAMERA);
+    public void galleryIntent(){
+        Log.d("Gallery Intent","Response Recieved");
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), RETCONSTANT.GALLERY);
     }
 
 
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode,Intent data)
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-        if(requestCode == RETCONSTANT.CAMERA && resultCode == RESULT_OK){
+
+        /**
+         * Currently both conditions execute the same code
+         * I was trying to implement real time text translation
+         * that would show up on the screen. If I have time, I'll try again
+         * but for now, this allows the user to take picture
+         * from gallery and camera (the behavior was super buggy and device
+         * dependant before)
+         */
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("onActivityResult","Checking conditions");
+        if(requestCode == RETCONSTANT.GALLERY && resultCode == RESULT_OK){
             Log.d("URI location", data.getData().toString());
             Intent actIntent = new Intent(this, TranslationActivity.class);
-            InputStream image_stream;
-            try {
-                image_stream = getContentResolver().openInputStream(data.getData());
-            }
-            catch (FileNotFoundException f){
-                f.printStackTrace();
-                return;
-            }
-            Bitmap bmp = BitmapFactory.decodeStream(image_stream);
-            actIntent.putExtra(RETCONSTANT.BITMAP,bmp);
             actIntent.putExtra(RETCONSTANT.CURRLONG, current_Lng);
             actIntent.putExtra(RETCONSTANT.CURRLAT, current_Lat);
             actIntent.putExtra(RETCONSTANT.IMAGEURI, data.getData().toString());
@@ -290,9 +314,40 @@ public class MainActivity extends AppCompatActivity
             Log.d("TargetLanguage",targetLanguage);
             actIntent.putExtra(RETCONSTANT.TARGETLANG,targetLanguage);
             startActivity(actIntent);
-
+        }
+        else if(requestCode == RETCONSTANT.CAMERA && resultCode == RESULT_OK){
+            Uri imageUri = Uri.fromFile(new File(mCurrentPhotoPath));
+            Intent actIntent = new Intent(this, TranslationActivity.class);
+            actIntent.putExtra(RETCONSTANT.CURRLONG, current_Lng);
+            actIntent.putExtra(RETCONSTANT.CURRLAT, current_Lat);
+            actIntent.putExtra(RETCONSTANT.IMAGEURI, imageUri.toString());
+            if(targetLanguage == null || targetLanguage.equals("")){
+                Log.d("TargetLanguage ERROR", "Custom target language not found!");
+                targetLanguage = "de"; //german for demo purposes
+            }
+            Log.d("TargetLanguage",targetLanguage);
+            actIntent.putExtra(RETCONSTANT.TARGETLANG,targetLanguage);
+            startActivity(actIntent);
         }
 
+    }
+
+    String mCurrentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 
 
