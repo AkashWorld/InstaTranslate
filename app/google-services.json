@@ -1,35 +1,35 @@
 {
   "project_info": {
-    "project_number": "623072166183",
-    "firebase_url": "https://maptranslate-3d07a.firebaseio.com",
-    "project_id": "maptranslate-3d07a",
-    "storage_bucket": "maptranslate-3d07a.appspot.com"
+    "project_number": "1025430587515",
+    "firebase_url": "https://insta-translate-20b9a.firebaseio.com",
+    "project_id": "insta-translate-20b9a",
+    "storage_bucket": "insta-translate-20b9a.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:623072166183:android:0904f927d48ae7d7",
+        "mobilesdk_app_id": "1:1025430587515:android:0904f927d48ae7d7",
         "android_client_info": {
           "package_name": "finalproject.mae.maptranslate"
         }
       },
       "oauth_client": [
         {
-          "client_id": "623072166183-6973diusq14j0lf4b62d2qjhd6mnrt1n.apps.googleusercontent.com",
+          "client_id": "1025430587515-3fdcijapb8keovurj35furq2123kgk8r.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "finalproject.mae.maptranslate",
-            "certificate_hash": "073dbd0594d677a51304e9f32bbf4914dc81c0db"
+            "certificate_hash": "506c3b3d299e7595434b88e8387cec4c557f0851"
           }
         },
         {
-          "client_id": "623072166183-qe3bhqhj6mq53n3rjtoqq8299pn72bpg.apps.googleusercontent.com",
+          "client_id": "1025430587515-fi62nncr4knc76tk85sbmaf9u33onlnf.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCklshRoDkgxrx3YR9Kio6UfF9iwDgJkxA"
+          "current_key": "AIzaSyAfPbSHS0beWbRbaJEKZs7RoGi_tLDhXKk"
         }
       ],
       "services": {
@@ -40,7 +40,7 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "623072166183-qe3bhqhj6mq53n3rjtoqq8299pn72bpg.apps.googleusercontent.com",
+              "client_id": "1025430587515-fi62nncr4knc76tk85sbmaf9u33onlnf.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

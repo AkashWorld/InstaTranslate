@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.firebase.FirebaseApp;
 import com.google.gson.Gson;
 
 import java.util.List;
@@ -63,6 +64,7 @@ public class StartPage extends AppCompatActivity {
     {
         protected List<String> doInBackground(List<String>... l) {
 
+//            FirebaseApp.initializeApp(getApplicationContext());
             LanguageCode languageCode=new LanguageCode(getApplicationContext());
             while(!languageCode.flag) ;
             targetLanguage=languageCode.getLanguageList();
