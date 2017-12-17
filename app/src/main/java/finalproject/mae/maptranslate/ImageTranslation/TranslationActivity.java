@@ -8,6 +8,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
@@ -104,7 +105,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     public void extractTextFromImage() {
         TextRecognizer textRecognizer = new TextRecognizer.Builder(this).build();
         if (!textRecognizer.isOperational()) {
-            Log.d("Text Recognizer", "Detector dependencies are not available yet");
+            Log.d("myfilter", "Detector dependencies are not available yet");
             return;
         }
         Frame imageFrame = new Frame.Builder().setBitmap(originalImage).build();
@@ -112,10 +113,11 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         for (int i = 0; i < textBlocks.size(); i++) {
             TextBlock textBlock = textBlocks.get(textBlocks.keyAt(i));
             extractedText = extractedText + textBlock.getValue();
-            Log.d("String:", extractedText);
+            Log.d("myfilter", "String: " + extractedText);
         }
         extractedText = extractedText.trim().replaceAll("\\n", " ");
         origin.setText(extractedText);
+        origin.setMovementMethod(new ScrollingMovementMethod());
         translateText();
     }
 
@@ -135,6 +137,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
                     String srcLang = translationObj.getString("detectedSourceLanguage");
                     detectText.setText("Original Text Language: " + srcLang);
                     translation.setText(translatedText);
+                    translation.setMovementMethod(new ScrollingMovementMethod());
                     translatedTargetLang.setText("Translated Text Language: " + targetLanguage);
 
                 } catch (org.json.JSONException e) {
@@ -168,8 +171,9 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         if (v.getId() == R.id.badbutt) {
             //return to map activity
             Log.d("onClick", "Bad Button Pressed. Start map activity");
-            Intent intent = new Intent(this, StartPage.class);
-            startActivity(intent);
+            //            Intent intent = new Intent(this, StartPage.class);
+//            startActivity(intent);
+            finish();
 
         } else if (v.getId() == R.id.goodbutt) {
             Log.d("onClick", "Good Button Pressed. Add to databse, start map activity");
@@ -184,8 +188,9 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
 
             //return to map activity
-            Intent intent = new Intent(this, StartPage.class);
-            startActivity(intent);
+//            Intent intent = new Intent(this, StartPage.class);
+//            startActivity(intent);
+            finish();
 
         }
     }

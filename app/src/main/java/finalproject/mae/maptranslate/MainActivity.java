@@ -50,11 +50,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.cloud.translate.Translation;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
@@ -91,6 +93,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mDatabase = FirebaseDatabase.getInstance().getReference();
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mf.getView().setClickable(true);
         mf.getMapAsync(this);
@@ -102,8 +105,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap gmap)
     {
-        map_initialize(gmap);
         ui_initialize();
+        map_initialize(gmap);
         location_initialize();
         database_initialize();
         mMap.setOnMapLoadedCallback(this);
@@ -228,10 +231,10 @@ public class MainActivity extends AppCompatActivity
                         if(location!=null)
                         {
                             get_current_location(location);
-                            for(Marker marker:marker_list)
-                                marker.remove();
-
-                            marker_list.clear();
+//                            for(Marker marker:marker_list)
+//                                marker.remove();
+//
+//                            marker_list.clear();
                             addMarkers(location);
                         }
 
@@ -377,7 +380,6 @@ public class MainActivity extends AppCompatActivity
         return image;
     }
 
-<<<<<<< HEAD
     public void onBackPressed() {
         Intent startMain = new Intent(Intent.ACTION_MAIN);
         startMain.addCategory(Intent.CATEGORY_HOME);
@@ -387,56 +389,46 @@ public class MainActivity extends AppCompatActivity
         System.exit(0);
     }
 
-||||||| merged common ancestors
-=======
     private void addMarkers(Location location){
         mDatabase.equalTo(targetLanguage,"targetLanguage");
     }
 
-
-    private class add_marker_task extends AsyncTask<LatLng,LatLng,LatLng>
-    {
-        @Override
-        protected LatLng doInBackground(LatLng  ... latLng)
-        {
-
-            boolean merged=false;
-
-            for(Marker marker:marker_list)
-            {
-                double lat=marker.getPosition().latitude;
-                double lng=marker.getPosition().longitude;
-                float[] result=new float[1];
-                Location.distanceBetween(lat,lng,latLng[0].latitude,latLng[0].longitude,result);
-                if(result[0]<=10)
-                {
-                    merged = true;
-                    break;
-                }
-            }
-
-            if(!merged)
-            {
-                Marker marker=mMap.addMarker(new MarkerOptions().position(latLng[0]));
-                marker_list.add(marker);
-            }
-
-            return  null;
-
-        }
-    }
 
     @Override
     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
         TranslationFB translationFB = dataSnapshot.getValue(TranslationFB.class);
         double marker_Lat = translationFB.getLatitude();
         double marker_Lng = translationFB.getLongitude();
-        LatLng LL = new LatLng(marker_Lat,marker_Lng);
+        final LatLng LL = new LatLng(marker_Lat,marker_Lng);
         float results[]=new float[1];
         Location.distanceBetween(current_Lat,current_Lng,marker_Lat,marker_Lng,results);
         if(results[0]<=100)
         {
-            new add_marker_task().execute(LL);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    boolean merged=false;
+
+                    for(Marker marker:marker_list)
+                    {
+                        double lat=marker.getPosition().latitude;
+                        double lng=marker.getPosition().longitude;
+                        float[] result=new float[1];
+                        Location.distanceBetween(lat,lng,LL.latitude,LL.longitude,result);
+                        if(result[0]<=10)
+                        {
+                            merged = true;
+                            break;
+                        }
+                    }
+
+                    if(!merged)
+                    {
+                        Marker marker=mMap.addMarker(new MarkerOptions().position(LL));
+                        marker_list.add(marker);
+                    }
+                }
+            }).run();
         }
 
     }
@@ -461,6 +453,30 @@ public class MainActivity extends AppCompatActivity
 
     }
 
->>>>>>> d75779de412274defee04c7dd5d2d58c2d6b5ff7
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Use this while retrieving from DB
+        mDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            // Called everytime DB changes
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot translate : dataSnapshot.getChildren()) {
+                    TranslationFB translation = translate.getValue(TranslationFB.class);
+                    Log.d("myfilter", "target lang: " + translation.getTargetLanguage());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
 
 }
