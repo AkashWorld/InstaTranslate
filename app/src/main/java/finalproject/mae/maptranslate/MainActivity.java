@@ -4,6 +4,7 @@ package finalproject.mae.maptranslate;
  */
 
 import android.Manifest;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,6 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -28,6 +30,7 @@ import finalproject.mae.maptranslate.ImageTranslation.RETCONSTANT;
 import finalproject.mae.maptranslate.ImageTranslation.TranslationActivity;
 import finalproject.mae.maptranslate.ImageTranslation.TranslationFB;
 
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -85,7 +88,6 @@ public class MainActivity extends AppCompatActivity
 
     DatabaseReference mDatabase;
     StorageReference mStorage;
-    private DatabaseReference ref;
 
 
 
@@ -187,7 +189,7 @@ public class MainActivity extends AppCompatActivity
             System.exit(1);
         }
 
-        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(this));
+        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(this,targetLanguage));
 
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -233,6 +235,10 @@ public class MainActivity extends AppCompatActivity
                         if(location!=null)
                         {
                             get_current_location(location);
+                            for(Marker marker:marker_list)
+                                marker.remove();
+
+                            marker_list.clear();
                             addMarkers(location);
                         }
                         else
@@ -256,12 +262,11 @@ public class MainActivity extends AppCompatActivity
     {
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        ref=mDatabase.getRef();
-        ref.addChildEventListener(this);
+        mDatabase.addChildEventListener(this);
     }
 
     private void addMarkers(Location location){
-        ref.equalTo(targetLanguage,"targetLanguage");
+        mDatabase.equalTo(targetLanguage,"targetLanguage");
     }
 
     private void get_current_location(Location loc)
@@ -279,6 +284,8 @@ public class MainActivity extends AppCompatActivity
 
 
     public void cameraIntent(){
+
+
         Intent pickIntent = new Intent();
         pickIntent.setType("image/*");
         pickIntent.setAction(Intent.ACTION_GET_CONTENT);
@@ -287,11 +294,7 @@ public class MainActivity extends AppCompatActivity
 
         String pickTitle = "Select or take a new Picture"; // Or get from strings.xml
         Intent chooserIntent = Intent.createChooser(pickIntent, pickTitle);
-        chooserIntent.putExtra
-                (
-                        Intent.EXTRA_INITIAL_INTENTS,
-                        new Intent[] { takePhotoIntent }
-                );
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,new Intent[] { takePhotoIntent });
 
         startActivityForResult(chooserIntent, RETCONSTANT.CAMERA);
     }
@@ -333,6 +336,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected LatLng doInBackground(LatLng  ... latLng)
         {
+
             boolean merged=false;
 
             for(Marker marker:marker_list)
@@ -365,8 +369,6 @@ public class MainActivity extends AppCompatActivity
         double marker_Lat = translationFB.getLatitude();
         double marker_Lng = translationFB.getLongitude();
         LatLng LL = new LatLng(marker_Lat,marker_Lng);
-        String marker_Image = translationFB.imageName();
-        String marker_Text = translationFB.getTranslatedText();
         float results[]=new float[1];
         Location.distanceBetween(current_Lat,current_Lng,marker_Lat,marker_Lng,results);
         if(results[0]<=100)

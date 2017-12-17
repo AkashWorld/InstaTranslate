@@ -1,20 +1,17 @@
 package finalproject.mae.maptranslate;
-import android.content.Context;
-import android.content.Intent;
+
 import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.view.LayoutInflater;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.ChildEventListener;
@@ -26,15 +23,11 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 
 import finalproject.mae.maptranslate.ImageTranslation.TranslationFB;
 
-public class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter,ChildEventListener {
-    private final View mWindow;
-    private Context mContext;
+public class Details extends AppCompatActivity implements ChildEventListener{
     DatabaseReference mDatabase;
     StorageReference mStorage;
     private ArrayAdapter<TranslationFB> adapter;
@@ -42,27 +35,25 @@ public class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter,Chil
     private double marker_Lat;
     private double marker_Lng;
     private String targetLanguage;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_details);
 
-    public CustomInfoWindowAdapter(Context context,String tl) {
-        this.mContext = context;
-        mWindow = LayoutInflater.from(context).inflate(R.layout.infowindow_list, null);
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mDatabase.addChildEventListener(this);
-        targetLanguage=tl;
-        mDatabase.equalTo(targetLanguage,"targetLanguage");
-    }
 
-    private View WindowContent(final Marker marker, View view){
-        view = mWindow;
+        targetLanguage=getIntent().getStringExtra("Targetlanguage");
+        marker_Lat=getIntent().getDoubleExtra("Lat",0);
+        marker_Lng=getIntent().getDoubleExtra("Lng",0);
 
-        marker_Lat=marker.getPosition().latitude;
-        marker_Lng=marker.getPosition().longitude;
 
-        adapter=new ArrayAdapter<TranslationFB>(view.getContext(),R.layout.custom_info_window,info_list)
+
+        adapter=new ArrayAdapter<TranslationFB>(this,R.layout.custom_info_window,info_list)
         {
             @Override
-            public View getView(int pos,View convertView,ViewGroup parent)
+            public View getView(int pos, View convertView, ViewGroup parent)
             {
                 convertView=View.inflate(getContext(),R.layout.custom_info_window, null);
                 TextView textView=convertView.findViewById(R.id.markerText);
@@ -71,7 +62,7 @@ public class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter,Chil
                 mStorage.child("images/"+info_list.get(pos).imageName()).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                            Picasso.with(mContext).load(uri).into(imageView);
+                        Picasso.with(getContext()).load(uri).into(imageView);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -81,45 +72,15 @@ public class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter,Chil
                     }
                 });
 
-
-//                imageView.setImageBitmap(info_list.get(pos).imageName());
                 return convertView;
             }
         };
 
-        ListView listView=view.findViewById(R.id.infowindow_list);
+        ListView listView=findViewById(R.id.infowindow_list);
         listView.setAdapter(adapter);
 
 
-        Button show_details=view.findViewById(R.id.Show_Details);
-        show_details.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent=new Intent(view.getContext(),Details.class);
-                intent.putExtra("Lat",marker_Lat);
-                intent.putExtra("Lng",marker_Lng);
-                intent.putExtra("Targetlanguage",targetLanguage);
-                view.getContext().startActivity(intent);
-            }
-        });
-//        String title = marker.getTitle();
-//        TextView tv = (TextView) view.findViewById(R.id.markerText);
-//        tv.setText(title);
-//        ImageView iv = (ImageView) view.findViewById(R.id.markerImage);
-
-        return view;
-
-    }
-    @Override
-    public View getInfoWindow(Marker marker) {
-        WindowContent(marker, mWindow);
-        return mWindow;
-    }
-
-    @Override
-    public View getInfoContents(Marker marker) {
-        WindowContent(marker, mWindow);
-        return mWindow;
+        mDatabase.equalTo(targetLanguage,"targetLanguage");
     }
 
     @Override
@@ -134,9 +95,6 @@ public class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter,Chil
             info_list.add(translationFB);
             adapter.notifyDataSetChanged();
         }
-
-        if(info_list.size()>=5)
-            mDatabase.removeEventListener(this);
 
     }
 

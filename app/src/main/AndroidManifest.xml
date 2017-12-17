@@ -24,7 +24,7 @@
             android:name="com.google.android.gms.vision.DEPENDENCIES"
             android:value="ocr" />
 
-        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".MainActivity" />
         <activity android:name=".ImageTranslation.TranslationActivity" />
         <activity android:name=".StartPage">
             <intent-filter>
@@ -33,6 +33,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Details"></activity>
     </application>
 
 </manifest>
