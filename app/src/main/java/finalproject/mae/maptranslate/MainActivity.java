@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.renderscript.ScriptGroup;
@@ -29,6 +30,7 @@ import android.widget.ImageButton;
 
 import finalproject.mae.maptranslate.ImageTranslation.RETCONSTANT;
 import finalproject.mae.maptranslate.ImageTranslation.TranslationActivity;
+import finalproject.mae.maptranslate.ImageTranslation.TranslationFB;
 
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -46,7 +48,11 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -66,7 +72,7 @@ import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,TakePicFragment.OnFragmentInteractionListener{
+        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,TakePicFragment.OnFragmentInteractionListener,ChildEventListener{
     private FusedLocationProviderClient fusedLocationClient;
     private double current_Lat;
     private double current_Lng;
@@ -77,6 +83,7 @@ public class MainActivity extends AppCompatActivity
     StorageReference mStorage;
     private List<String> targetCode;
     private List<String> languageList;
+    private ArrayList<Marker> marker_list=new ArrayList<Marker>();
 
 
     @Override
@@ -98,6 +105,7 @@ public class MainActivity extends AppCompatActivity
         map_initialize(gmap);
         ui_initialize();
         location_initialize();
+        database_initialize();
         mMap.setOnMapLoadedCallback(this);
     }
 
@@ -164,6 +172,9 @@ public class MainActivity extends AppCompatActivity
             System.exit(1);
         }
 
+        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(this,targetLanguage));
+
+
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -178,6 +189,14 @@ public class MainActivity extends AppCompatActivity
                 marker.hideInfoWindow();
             }
         });
+
+    }
+
+    private void database_initialize()
+    {
+        mStorage = FirebaseStorage.getInstance().getReference();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mDatabase.addChildEventListener(this);
     }
 
     private void location_initialize()
@@ -207,7 +226,15 @@ public class MainActivity extends AppCompatActivity
                     for(Location location: locationResult.getLocations())
                     {
                         if(location!=null)
+                        {
                             get_current_location(location);
+                            for(Marker marker:marker_list)
+                                marker.remove();
+
+                            marker_list.clear();
+                            addMarkers(location);
+                        }
+
                         else
                             break;
                     }
@@ -350,6 +377,7 @@ public class MainActivity extends AppCompatActivity
         return image;
     }
 
+<<<<<<< HEAD
     public void onBackPressed() {
         Intent startMain = new Intent(Intent.ACTION_MAIN);
         startMain.addCategory(Intent.CATEGORY_HOME);
@@ -359,5 +387,80 @@ public class MainActivity extends AppCompatActivity
         System.exit(0);
     }
 
+||||||| merged common ancestors
+=======
+    private void addMarkers(Location location){
+        mDatabase.equalTo(targetLanguage,"targetLanguage");
+    }
+
+
+    private class add_marker_task extends AsyncTask<LatLng,LatLng,LatLng>
+    {
+        @Override
+        protected LatLng doInBackground(LatLng  ... latLng)
+        {
+
+            boolean merged=false;
+
+            for(Marker marker:marker_list)
+            {
+                double lat=marker.getPosition().latitude;
+                double lng=marker.getPosition().longitude;
+                float[] result=new float[1];
+                Location.distanceBetween(lat,lng,latLng[0].latitude,latLng[0].longitude,result);
+                if(result[0]<=10)
+                {
+                    merged = true;
+                    break;
+                }
+            }
+
+            if(!merged)
+            {
+                Marker marker=mMap.addMarker(new MarkerOptions().position(latLng[0]));
+                marker_list.add(marker);
+            }
+
+            return  null;
+
+        }
+    }
+
+    @Override
+    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+        TranslationFB translationFB = dataSnapshot.getValue(TranslationFB.class);
+        double marker_Lat = translationFB.getLatitude();
+        double marker_Lng = translationFB.getLongitude();
+        LatLng LL = new LatLng(marker_Lat,marker_Lng);
+        float results[]=new float[1];
+        Location.distanceBetween(current_Lat,current_Lng,marker_Lat,marker_Lng,results);
+        if(results[0]<=100)
+        {
+            new add_marker_task().execute(LL);
+        }
+
+    }
+
+    @Override
+    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+    }
+
+    @Override
+    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onCancelled(DatabaseError databaseError) {
+
+    }
+
+>>>>>>> d75779de412274defee04c7dd5d2d58c2d6b5ff7
 
 }
