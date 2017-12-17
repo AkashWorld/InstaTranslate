@@ -42,7 +42,6 @@ public class Details extends AppCompatActivity implements ChildEventListener {
 
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        mDatabase.addChildEventListener(this);
 
         targetLanguage=getIntent().getStringExtra("Targetlanguage");
         marker_Lat=getIntent().getDoubleExtra("Lat",0);

@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="finalproject.mae.maptranslate.finalproject.mae.maptranslate.Details">
+    tools:context="finalproject.mae.maptranslate.Details">
 
     <ListView
-        android:id="@+id/finalproject.mae.maptranslate.Details"
+        android:id="@+id/infowindow_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:layout_editor_absoluteX="-3dp"

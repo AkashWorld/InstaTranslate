@@ -175,23 +175,20 @@ public class MainActivity extends AppCompatActivity
             System.exit(1);
         }
 
-        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(this,targetLanguage));
-
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                marker.showInfoWindow();
+                Intent intent=new Intent(getApplicationContext(),Details.class);
+                intent.putExtra("Lat",marker.getPosition().latitude);
+                intent.putExtra("Lng",marker.getPosition().longitude);
+                intent.putExtra("Targetlanguage",targetLanguage);
+                startActivity(intent);
                 return true;
             }
         });
 
-        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
-            @Override
-            public void onInfoWindowClick(final Marker marker) {
-                marker.hideInfoWindow();
-            }
-        });
+
 
     }
 
