@@ -75,7 +75,7 @@ import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,TakePicFragment.OnFragmentInteractionListener{
+        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,TakePicFragment.OnFragmentInteractionListener,ChildEventListener{
     private FusedLocationProviderClient fusedLocationClient;
     private double current_Lat;
     private double current_Lng;
@@ -94,7 +94,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mDatabase = FirebaseDatabase.getInstance().getReference();
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mf.getView().setClickable(true);
         mf.getMapAsync(this);
@@ -197,6 +196,7 @@ public class MainActivity extends AppCompatActivity
     {
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mDatabase.addChildEventListener(this);
     }
 
     private void location_initialize()
@@ -438,6 +438,65 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+    }
+
+
+    @Override
+    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+        TranslationFB translationFB = dataSnapshot.getValue(TranslationFB.class);
+        double marker_Lat = translationFB.getLatitude();
+        double marker_Lng = translationFB.getLongitude();
+        final LatLng LL = new LatLng(marker_Lat,marker_Lng);
+        float results[]=new float[1];
+        Location.distanceBetween(current_Lat,current_Lng,marker_Lat,marker_Lng,results);
+        if(results[0]<=100)
+        {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    boolean merged=false;
+
+                    for(Marker marker:marker_list)
+                    {
+                        double lat=marker.getPosition().latitude;
+                        double lng=marker.getPosition().longitude;
+                        float[] result=new float[1];
+                        Location.distanceBetween(lat,lng,LL.latitude,LL.longitude,result);
+                        if(result[0]<=10)
+                        {
+                            merged = true;
+                            break;
+                        }
+                    }
+
+                    if(!merged)
+                    {
+                        Marker marker=mMap.addMarker(new MarkerOptions().position(LL));
+                        marker_list.add(marker);
+                    }
+                }
+            }).run();
+        }
+    }
+
+    @Override
+    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+    }
+
+    @Override
+    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onCancelled(DatabaseError databaseError) {
+
     }
 
 }
