@@ -1,5 +1,7 @@
 package finalproject.mae.maptranslate;
 
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,11 +10,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.ceylonlabs.imageviewpopup.ImagePopup;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.ChildEventListener;
@@ -85,6 +89,23 @@ public class Details extends AppCompatActivity {
 
         ListView listView=findViewById(R.id.infowindow_list);
         listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                ImageView imageView=view.findViewById(R.id.markerImage);
+                ImagePopup imagePopup = new ImagePopup(view.getContext());
+                imagePopup.setWindowWidth(Resources.getSystem().getDisplayMetrics().widthPixels);
+                imagePopup.setWindowHeight(Resources.getSystem().getDisplayMetrics().heightPixels);
+                imagePopup.setBackgroundColor(Color.BLACK);
+                imagePopup.setHideCloseIcon(true);
+                imagePopup.setImageOnClickClose(true);
+                imagePopup.initiatePopup(imageView.getDrawable());
+                imagePopup.viewPopup();
+
+            }
+        });
 
 
         Query query=mDatabase.getRef();

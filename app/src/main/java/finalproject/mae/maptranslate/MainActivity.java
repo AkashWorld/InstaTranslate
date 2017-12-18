@@ -56,6 +56,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -74,7 +75,7 @@ import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,TakePicFragment.OnFragmentInteractionListener,ChildEventListener{
+        implements OnMapReadyCallback,GoogleMap.OnMapLoadedCallback, View.OnClickListener, AdapterView.OnItemSelectedListener,TakePicFragment.OnFragmentInteractionListener{
     private FusedLocationProviderClient fusedLocationClient;
     private double current_Lat;
     private double current_Lng;
@@ -196,7 +197,6 @@ public class MainActivity extends AppCompatActivity
     {
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        mDatabase.addChildEventListener(this);
     }
 
     private void location_initialize()
@@ -210,6 +210,7 @@ public class MainActivity extends AppCompatActivity
                     if(location!=null)
                     {
                         get_current_location(location);
+                        addMarkers(location);
                     }
                 }
             });
@@ -228,11 +229,11 @@ public class MainActivity extends AppCompatActivity
                         if(location!=null)
                         {
                             get_current_location(location);
-//                            for(Marker marker:marker_list)
-//                                marker.remove();
-//
-//                            marker_list.clear();
+                            ArrayList<Marker> temp=new ArrayList<Marker>(marker_list);
+                            marker_list.clear();
                             addMarkers(location);
+                            for(Marker marker:temp)
+                                marker.remove();
                         }
 
                         else
@@ -387,83 +388,48 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addMarkers(Location location){
-        mDatabase.equalTo(targetLanguage,"targetLanguage");
-    }
-
-
-    @Override
-    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-        TranslationFB translationFB = dataSnapshot.getValue(TranslationFB.class);
-        double marker_Lat = translationFB.getLatitude();
-        double marker_Lng = translationFB.getLongitude();
-        final LatLng LL = new LatLng(marker_Lat,marker_Lng);
-        float results[]=new float[1];
-        Location.distanceBetween(current_Lat,current_Lng,marker_Lat,marker_Lng,results);
-        if(results[0]<=100)
-        {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    boolean merged=false;
-
-                    for(Marker marker:marker_list)
-                    {
-                        double lat=marker.getPosition().latitude;
-                        double lng=marker.getPosition().longitude;
-                        float[] result=new float[1];
-                        Location.distanceBetween(lat,lng,LL.latitude,LL.longitude,result);
-                        if(result[0]<=10)
-                        {
-                            merged = true;
-                            break;
-                        }
-                    }
-
-                    if(!merged)
-                    {
-                        Marker marker=mMap.addMarker(new MarkerOptions().position(LL));
-                        marker_list.add(marker);
-                    }
-                }
-            }).run();
-        }
-
-    }
-
-    @Override
-    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-    }
-
-    @Override
-    public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-    }
-
-    @Override
-    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-    }
-
-    @Override
-    public void onCancelled(DatabaseError databaseError) {
-
-    }
-
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Use this while retrieving from DB
-        mDatabase.addValueEventListener(new ValueEventListener() {
+        final double lat=location.getLatitude();
+        final double lng=location.getLongitude();
+        Query query=mDatabase.getRef();
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            // Called everytime DB changes
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot translate : dataSnapshot.getChildren()) {
-                    TranslationFB translation = translate.getValue(TranslationFB.class);
-                    Log.d("myfilter", "target lang: " + translation.getTargetLanguage());
+                for(DataSnapshot translate:dataSnapshot.getChildren())
+                {
+                    TranslationFB translationFB = translate.getValue(TranslationFB.class);
+                    double marker_Lat = translationFB.getLatitude();
+                    double marker_Lng = translationFB.getLongitude();
+                    final LatLng LL = new LatLng(marker_Lat,marker_Lng);
+                    float results[]=new float[1];
+                    Location.distanceBetween(lat,lng,marker_Lat,marker_Lng,results);
+                    if(results[0]<=100)
+                    {
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                boolean merged=false;
+
+                                for(Marker marker:marker_list)
+                                {
+                                    double lat=marker.getPosition().latitude;
+                                    double lng=marker.getPosition().longitude;
+                                    float[] result=new float[1];
+                                    Location.distanceBetween(lat,lng,LL.latitude,LL.longitude,result);
+                                    if(result[0]<=10)
+                                    {
+                                        merged = true;
+                                        break;
+                                    }
+                                }
+
+                                if(!merged)
+                                {
+                                    Marker marker=mMap.addMarker(new MarkerOptions().position(LL));
+                                    marker_list.add(marker);
+                                }
+                            }
+                        }).run();
+                    }
                 }
             }
 
@@ -473,7 +439,5 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
-
-
 
 }
