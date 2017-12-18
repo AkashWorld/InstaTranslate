@@ -51,18 +51,17 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     StorageReference mStorage;
     
     String targetLanguage;
-    Button goodButton;
-    Button badButton;
     TextView origin;
     TextView translation;
     TextView translatedTargetLang;
-    ImageView image;
+
     Bitmap originalImage;
     Uri imageUri;
     String extractedText;
     String translatedText;
     TextView detectText;
     String language;
+
     double currentLongitude;
     double currentLatitude;
 
@@ -74,14 +73,14 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         mStorage = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        goodButton = (Button) findViewById(R.id.goodbutt);
-        badButton = (Button) findViewById(R.id.badbutt);
+        Button goodButton = (Button) findViewById(R.id.goodbutt);
+        Button badButton = (Button) findViewById(R.id.badbutt);
         goodButton.setOnClickListener(this);
         badButton.setOnClickListener(this);
         origin = (TextView) findViewById(R.id.origText);
         translation = (TextView) findViewById(R.id.translationText);
         translatedTargetLang = (TextView) findViewById(R.id.TranslatedTextLang);
-        image = (ImageView) findViewById(R.id.translationPic);
+        ImageView image = (ImageView) findViewById(R.id.translationPic);
         detectText = (TextView) findViewById(R.id.detectText);
         currentLatitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLAT, 0);
         currentLongitude = getIntent().getDoubleExtra(RETCONSTANT.CURRLONG, 0);

@@ -81,7 +81,6 @@ public class MainActivity extends AppCompatActivity
     private double current_Lng;
     private GoogleMap mMap;
     public String targetLanguage;
-    ImageButton picChooser;
     DatabaseReference mDatabase;
     StorageReference mStorage;
     private List<String> targetCode;
@@ -141,7 +140,7 @@ public class MainActivity extends AppCompatActivity
         if(index==-1)
             index=targetCode.indexOf("en");
         choose_targlang.setSelection(index);
-        picChooser = (ImageButton)findViewById(R.id.takePicButton);
+        ImageButton picChooser = (ImageButton)findViewById(R.id.takePicButton);
         picChooser.setOnClickListener(this);
     }
 

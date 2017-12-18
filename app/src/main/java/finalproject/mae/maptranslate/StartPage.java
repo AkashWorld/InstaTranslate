@@ -64,7 +64,6 @@ public class StartPage extends AppCompatActivity {
     {
         protected List<String> doInBackground(List<String>... l) {
 
-//            FirebaseApp.initializeApp(getApplicationContext());
             LanguageCode languageCode=new LanguageCode(getApplicationContext());
             while(!languageCode.flag) ;
             targetLanguage=languageCode.getLanguageList();

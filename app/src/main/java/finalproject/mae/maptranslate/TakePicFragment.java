@@ -28,8 +28,7 @@ public class TakePicFragment extends Fragment implements View.OnClickListener{
     public TakePicFragment() {
         // Required empty public constructor
     }
-    ImageButton camera;
-    ImageButton gallery;
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -58,8 +57,8 @@ public class TakePicFragment extends Fragment implements View.OnClickListener{
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_pic_chooser, container, false);
-        camera = v.findViewById(R.id.camera);
-        gallery = v.findViewById(R.id.gallery);
+        ImageButton camera = v.findViewById(R.id.camera);
+        ImageButton gallery = v.findViewById(R.id.gallery);
         camera.setOnClickListener(this);
         gallery.setOnClickListener(this);
         return v;
