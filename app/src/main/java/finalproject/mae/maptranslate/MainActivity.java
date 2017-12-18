@@ -153,6 +153,12 @@ public class MainActivity extends AppCompatActivity
         prefsEditor.putString(RETCONSTANT.SHAREDPREFTARGETLANG, targetLanguage);
         prefsEditor.commit();
         Log.d("Target Language Code", targetLanguage);
+
+        ArrayList<Marker> temp=new ArrayList<Marker>(marker_list);
+        marker_list.clear();
+        update_markers(current_Lat,current_Lng);
+        for(Marker marker:temp)
+            marker.remove();
     }
 
     public void onNothingSelected(AdapterView<?> parent) {
@@ -390,54 +396,9 @@ public class MainActivity extends AppCompatActivity
     private void addMarkers(Location location){
         final double lat=location.getLatitude();
         final double lng=location.getLongitude();
-        Query query=mDatabase.getRef();
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot translate:dataSnapshot.getChildren())
-                {
-                    TranslationFB translationFB = translate.getValue(TranslationFB.class);
-                    double marker_Lat = translationFB.getLatitude();
-                    double marker_Lng = translationFB.getLongitude();
-                    final LatLng LL = new LatLng(marker_Lat,marker_Lng);
-                    float results[]=new float[1];
-                    Location.distanceBetween(lat,lng,marker_Lat,marker_Lng,results);
-                    if(results[0]<=100)
-                    {
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                boolean merged=false;
 
-                                for(Marker marker:marker_list)
-                                {
-                                    double lat=marker.getPosition().latitude;
-                                    double lng=marker.getPosition().longitude;
-                                    float[] result=new float[1];
-                                    Location.distanceBetween(lat,lng,LL.latitude,LL.longitude,result);
-                                    if(result[0]<=10)
-                                    {
-                                        merged = true;
-                                        break;
-                                    }
-                                }
+        update_markers(lat,lng);
 
-                                if(!merged)
-                                {
-                                    Marker marker=mMap.addMarker(new MarkerOptions().position(LL));
-                                    marker_list.add(marker);
-                                }
-                            }
-                        }).run();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
 
 
@@ -449,7 +410,7 @@ public class MainActivity extends AppCompatActivity
         final LatLng LL = new LatLng(marker_Lat,marker_Lng);
         float results[]=new float[1];
         Location.distanceBetween(current_Lat,current_Lng,marker_Lat,marker_Lng,results);
-        if(results[0]<=100)
+        if(results[0]<=100 && translationFB.equals(targetLanguage))
         {
             new Thread(new Runnable() {
                 @Override
@@ -497,6 +458,58 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCancelled(DatabaseError databaseError) {
 
+    }
+
+    private void update_markers(final double lat,final double lng)
+    {
+        Query query=mDatabase.getRef();
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot translate:dataSnapshot.getChildren())
+                {
+                    TranslationFB translationFB = translate.getValue(TranslationFB.class);
+                    double marker_Lat = translationFB.getLatitude();
+                    double marker_Lng = translationFB.getLongitude();
+                    final LatLng LL = new LatLng(marker_Lat,marker_Lng);
+                    float results[]=new float[1];
+                    Location.distanceBetween(lat,lng,marker_Lat,marker_Lng,results);
+                    if(results[0]<=100 && translationFB.getTargetLanguage().equals(targetLanguage))
+                    {
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                boolean merged=false;
+
+                                for(Marker marker:marker_list)
+                                {
+                                    double lat=marker.getPosition().latitude;
+                                    double lng=marker.getPosition().longitude;
+                                    float[] result=new float[1];
+                                    Location.distanceBetween(lat,lng,LL.latitude,LL.longitude,result);
+                                    if(result[0]<=10)
+                                    {
+                                        merged = true;
+                                        break;
+                                    }
+                                }
+
+                                if(!merged)
+                                {
+                                    Marker marker=mMap.addMarker(new MarkerOptions().position(LL));
+                                    marker_list.add(marker);
+                                }
+                            }
+                        }).run();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
 }
