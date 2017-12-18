@@ -35,6 +35,7 @@
             android:value="ocr" />
 
         <activity android:name=".MainActivity"></activity>
+        <activity android:name=".Details"/>
         <activity android:name=".ImageTranslation.TranslationActivity" />
         <activity android:name=".StartPage">
             <intent-filter>

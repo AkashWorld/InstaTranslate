@@ -11,7 +11,7 @@ public class TranslationFB {
     public TranslationFB() {
     }
 
-    public TranslationFB(String targetLanguage, Double latitude, Double longitude, String  imageName, String translatedText) {
+    public TranslationFB(String targetLanguage, Double latitude, Double longitude, String imageName, String translatedText) {
         this.targetLanguage = targetLanguage;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -37,5 +37,9 @@ public class TranslationFB {
 
     public String getTranslatedText() {
         return translatedText;
+    }
+
+    public void putImageName(String imageName) {
+        this.imageName = imageName;
     }
 }

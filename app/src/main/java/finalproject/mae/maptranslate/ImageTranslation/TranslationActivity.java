@@ -197,6 +197,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     
     private void addToFirebaseDatabase() {
         String id = mDatabase.push().getKey(); // Unique id (primary key)
+        Log.d("myfilter", "ID: " + id);
         TranslationFB translation = new TranslationFB(targetLanguage, currentLatitude, currentLongitude, id, translatedText);
         mDatabase.child(id).setValue(translation); // Add to DB
 

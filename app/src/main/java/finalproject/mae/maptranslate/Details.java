@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -19,6 +20,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
@@ -27,7 +30,7 @@ import java.util.ArrayList;
 
 import finalproject.mae.maptranslate.ImageTranslation.TranslationFB;
 
-public class Details extends AppCompatActivity implements ChildEventListener {
+public class Details extends AppCompatActivity {
     DatabaseReference mDatabase;
     StorageReference mStorage;
     private ArrayAdapter<TranslationFB> adapter;
@@ -58,19 +61,24 @@ public class Details extends AppCompatActivity implements ChildEventListener {
                 TextView textView=convertView.findViewById(R.id.markerText);
                 final ImageView imageView=convertView.findViewById(R.id.markerImage);
                 textView.setText(info_list.get(pos).getTranslatedText());
-                mStorage.child("images/"+info_list.get(pos).imageName()).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        Picasso.with(getContext()).load(uri).into(imageView);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Handle any errors
-                        imageView.setImageAlpha(android.R.drawable.sym_def_app_icon);
-                    }
-                });
-
+                Log.d("myfilter", "ImageName0: " + info_list.get(pos).imageName());
+                if(imageView.getTag().equals("123")) {
+                    imageView.setTag("000");
+                    mStorage.child("images/" + info_list.get(pos).imageName()).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Log.d("myfilter", "SUCCESS!!!");
+                            Picasso.with(Details.this).load(uri).into(imageView);
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle any errors
+                            Log.d("myfilter", "FAIL!!!");
+                            imageView.setImageAlpha(android.R.drawable.sym_def_app_icon);
+                        }
+                    });
+                }
                 return convertView;
             }
         };
@@ -79,41 +87,35 @@ public class Details extends AppCompatActivity implements ChildEventListener {
         listView.setAdapter(adapter);
 
 
-        mDatabase.equalTo(targetLanguage,"targetLanguage");
+        Query query=mDatabase.getRef();
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot translations:dataSnapshot.getChildren())
+                {
+                    TranslationFB translationFB=translations.getValue(TranslationFB.class);
+                    double info_Lat = translationFB.getLatitude();
+                    double info_Lng = translationFB.getLongitude();
+                    String imageName = translations.getKey();
+                    translationFB.putImageName(imageName);
+                    float results[]=new float[1];
+                    Log.d("myfilter", "ImageName1: " + translations.getKey());
+                    Location.distanceBetween(info_Lat,info_Lng,marker_Lat,marker_Lng,results);
+                    if(results[0]<=10 && translationFB.getTargetLanguage().equals(targetLanguage))
+                    {
+                        info_list.add(translationFB);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
-    @Override
-    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-        TranslationFB translationFB = dataSnapshot.getValue(TranslationFB.class);
-        double info_Lat = translationFB.getLatitude();
-        double info_Lng = translationFB.getLongitude();
-        float results[]=new float[1];
-        Location.distanceBetween(info_Lat,info_Lng,marker_Lat,marker_Lng,results);
-        if(results[0]<=10)
-        {
-            info_list.add(translationFB);
-            adapter.notifyDataSetChanged();
-        }
 
-    }
 
-    @Override
-    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-    }
-
-    @Override
-    public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-    }
-
-    @Override
-    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-    }
-
-    @Override
-    public void onCancelled(DatabaseError databaseError) {
-
-    }
 }
